@@ -1,0 +1,19 @@
+{
+  "Prefix": "/api/filestorage",
+  "Server": {
+    "Host": "localhost",
+    "Port": "9000"
+  },
+  "MysqlConf": {
+    "Username": "root",
+    "Password": "Password",
+    "Net": "tcp",
+    "Address": "127.0.0.1:3306",
+    "DatabaseName": "choice"
+  },
+  "redis": {
+    "addr": "172.30.253.124:6379",
+    "password": "",
+    "db": 0
+  }
+}
