@@ -38,6 +38,3 @@ type Employee struct {
 	Web         string `json:"web" db:"web"`
 }
 
-type GetEmployeeRequest struct {
-	EmployeeID string `json:"employee_id" binding:"required"`
-}

@@ -8,7 +8,6 @@ func IsValidEmail(email string) bool {
 	return re.MatchString(email)
 }
 
-// Validate phone number format
 func IsValidPhone(phone string) bool {
 	// Allow +, numbers, spaces, dashes, parentheses
 	re := regexp.MustCompile(`^\+?[0-9\s\-\(\)]+$`)

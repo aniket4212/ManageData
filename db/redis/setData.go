@@ -9,8 +9,8 @@ import (
 )
 
 func SetEmployee(employees []model.Employee) error {
-	ctx := context.Background()
 	logs := utils.GetLogger()
+	ctx := context.Background()
 
 	ttl := 300
 
@@ -46,8 +46,7 @@ func SetEmployee(employees []model.Employee) error {
 	return nil
 }
 
-func SetSingleEmployeeInRedis(employee model.Employee) error {
-	ctx := context.Background()
+func SetEmployeeByIdInRedis(ctx context.Context, employee model.Employee) error {
 	key := fmt.Sprintf("employee:%s", employee.ID)
 
 	data := map[string]interface{}{
@@ -65,66 +64,3 @@ func SetSingleEmployeeInRedis(employee model.Employee) error {
 
 	return RDB.HSet(ctx, key, data).Err()
 }
-
-// func GetEmployeeFromRedis(employeeID string) (*model.Employee, error) {
-// 	ctx := context.Background()
-// 	logs := utils.GetLogger()
-
-// 	key := fmt.Sprintf("employee:%s", employeeID)
-
-// 	// Attempt to get employee data from Redis
-// 	data, err := RDB.HGetAll(ctx, key).Result()
-// 	if err != nil {
-// 		logs.Error().Err(err).Msgf("Failed to retrieve employee data for ID: %s from Redis", employeeID)
-// 		return nil, fmt.Errorf("failed to retrieve employee data from Redis: %v", err)
-// 	}
-
-// 	// If the data doesn't exist, return nil
-// 	if len(data) == 0 {
-// 		logs.Warn().Msgf("No data found for employee ID: %s in Redis", employeeID)
-// 		return nil, nil
-// 	}
-
-// 	// Map Redis data to Employee struct
-// 	employee := &model.Employee{
-// 		ID:          employeeID,
-// 		FirstName:   data["FirstName"],
-// 		LastName:    data["LastName"],
-// 		CompanyName: data["CompanyName"],
-// 		Address:     data["Address"],
-// 		City:        data["City"],
-// 		County:      data["County"],
-// 		Postal:      data["Postal"],
-// 		Phone:       data["Phone"],
-// 		Email:       data["Email"],
-// 		Web:         data["Web"],
-// 	}
-
-// 	return employee, nil
-// }
-
-// func FetchImportedListFromRedis() ([]model.Employee, error) {
-// 	ctx := context.Background()
-
-// 	// Fetch data from Redis
-// 	employees, err := RDB.HGetAll(ctx, "employee:list").Result()
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to get data from Redis: %v", err)
-// 	}
-
-// 	if len(employees) == 0 {
-// 		return nil, nil // Indicating data is not found
-// 	}
-
-// 	// Convert the Redis response into the employee model (adapt based on how you store the data)
-// 	var employeeList []model.Employee
-// 	for key, value := range employees {
-// 		emp := model.Employee{
-// 			ID:        key,
-// 			FirstName: value, // Example, adjust based on your data format
-// 		}
-// 		employeeList = append(employeeList, emp)
-// 	}
-
-// 	return employeeList, nil
-// }

@@ -2,9 +2,9 @@ package controller
 
 import (
 	"bytes"
-	"fmt"
 	"io"
-	"managedata/db/mysql"
+	"managedata/services"
+	"managedata/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,21 +12,24 @@ import (
 )
 
 func UploadExcelHandler(c *gin.Context) {
-	// Parse the file from the multipart request
+	logs := utils.GetLogger()
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
+		logs.Info().Msgf("Failed to get file from request: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File upload failed"})
 		return
 	}
 
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
+		logs.Info().Msgf("Unable to read uploaded file: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to read uploaded file"})
 		return
 	}
 	// Create a new reader from the bytes
 	f, err := excelize.OpenReader(bytes.NewReader(fileBytes))
 	if err != nil {
+		logs.Info().Msgf("Unable to parse Excel file: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Unable to parse Excel file"})
 		return
 	}
@@ -34,6 +37,7 @@ func UploadExcelHandler(c *gin.Context) {
 
 	sheetNames := f.GetSheetList()
 	if len(sheetNames) == 0 {
+		logs.Info().Msgf("No sheets found in the Excel file")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No sheets found in the Excel file"})
 		return
 	}
@@ -41,23 +45,24 @@ func UploadExcelHandler(c *gin.Context) {
 	for _, sheetName := range sheetNames {
 		rows, err := f.GetRows(sheetName)
 		if err != nil || len(rows) == 0 {
-			fmt.Printf("unable to read rows from sheet %s: %v", sheetName, err)
+			logs.Info().Msgf("unable to read rows from sheet %s: %v", sheetName, err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "unable to read rows from sheet"})
 			return
 		}
 
 		header := rows[0]
-		if !mysql.CompareHeaders(header, mysql.ExpectedHeaders) {
-			fmt.Printf("header format is incorrect in sheet %s. Expected: %v, got: %v", sheetName, mysql.ExpectedHeaders, header)
+		if !services.CompareHeaders(header, services.ExpectedHeaders) {
+			logs.Info().Msgf("header format is incorrect in sheet %s. Expected: %v, got: %v", sheetName, services.ExpectedHeaders, header)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "header format is incorrect in sheet"})
 			return
 		}
 
 	}
-	// Parse and insert the Excel data
-	go mysql.ParseAndInsertExcelFile(bytes.NewReader(fileBytes))
+	go func() {
+		logs.Info().Msgf("Starting async parsing and DB insertion")
+		services.ParseAndInsertExcelFile(bytes.NewReader(fileBytes))
+	}()
 
-	// If everything went fine, return success message
+	logs.Info().Msgf("File uploaded successfully")
 	c.JSON(http.StatusOK, gin.H{"message": "Excel data inserted into DB"})
-	fmt.Println("File uploaded successfully")
 }

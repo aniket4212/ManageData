@@ -8,8 +8,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func GetEmployeeByIDFromRedis(employeeID string) (model.Employee, error) {
-	ctx := context.Background()
+func GetEmployeeByIDFromRedis(ctx context.Context, employeeID string) (model.Employee, error) {
 
 	key := fmt.Sprintf("employee:%s", employeeID)
 
@@ -42,8 +41,7 @@ func GetEmployeeByIDFromRedis(employeeID string) (model.Employee, error) {
 	return employee, nil
 }
 
-func GetAllEmployeesFromRedis() ([]model.Employee, error) {
-	ctx := context.Background()
+func GetAllEmployeesFromRedis(ctx context.Context) ([]model.Employee, error) {
 
 	// Get all keys matching pattern
 	keys, err := RDB.Keys(ctx, "employee:*").Result()
@@ -60,7 +58,7 @@ func GetAllEmployeesFromRedis() ([]model.Employee, error) {
 		}
 
 		emp := model.Employee{
-			ID:          key[len("employee:"):], // Extract ID from key
+			ID:          key[len("employee:"):],
 			FirstName:   data["FirstName"],
 			LastName:    data["LastName"],
 			CompanyName: data["CompanyName"],

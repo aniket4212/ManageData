@@ -7,8 +7,7 @@ import (
 	"managedata/model"
 )
 
-func FetchEmployeeByID(id string) (model.Employee, error) {
-	ctx := context.Background()
+func FetchEmployeeByID(ctx context.Context, id string) (model.Employee, error) {
 
 	query := `
 		SELECT id, first_name, last_name, company_name, address, city, county, postal, phone, email, web
