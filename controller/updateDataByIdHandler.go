@@ -4,13 +4,14 @@ import (
 	"managedata/db/mysql"
 	"managedata/db/redis"
 	"managedata/model"
-	"managedata/utils" 
+	"managedata/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func UpdateEmployee(c *gin.Context) {
+func UpdataDataByIdHandler(c *gin.Context) {
+	ctx := c.Request.Context()
 	logs := utils.GetLogger()
 
 	var employee model.Employee
@@ -23,10 +24,18 @@ func UpdateEmployee(c *gin.Context) {
 		return
 	}
 
+	if employee.ID == "" {
+		logs.Warn().Str("EmployeeID", employee.ID).Msg("Employee not found in DB")
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "Employee not found",
+		})
+		return
+	}
+
 	logs.Info().Str("EmployeeID", employee.ID).Msg("Starting employee update process")
 
 	// Fetch the current employee from DB
-	existingEmployee, err := mysql.FetchEmployeeByID(employee.ID)
+	existingEmployee, err := mysql.FetchEmployeeByID(ctx, employee.ID)
 	if err != nil {
 		logs.Error().Err(err).Str("EmployeeID", employee.ID).Msg("Failed to fetch employee from DB")
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -44,7 +53,6 @@ func UpdateEmployee(c *gin.Context) {
 		return
 	}
 
-	// Update only non-empty fields
 	if employee.FirstName != "" {
 		existingEmployee.FirstName = employee.FirstName
 	}
@@ -76,22 +84,23 @@ func UpdateEmployee(c *gin.Context) {
 		existingEmployee.Web = employee.Web
 	}
 
-	// Update in Redis
-	if err := redis.SetSingleEmployeeInRedis(existingEmployee); err != nil {
-		logs.Error().Err(err).Str("EmployeeID", employee.ID).Msg("Failed to update employee in Redis")
-		// (continue to update MySQL even if Redis fails)
-	} else {
-		logs.Info().Str("EmployeeID", employee.ID).Msg("Successfully updated employee in Redis")
-	}
-
 	// Update in MySQL
-	if err := mysql.UpdateEmployeeByID(existingEmployee); err != nil {
+	if err := mysql.UpdateEmployeeByID(ctx, existingEmployee); err != nil {
 		logs.Error().Err(err).Str("EmployeeID", employee.ID).Msg("Failed to update employee in MySQL")
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to update employee",
 			"error":   err.Error(),
 		})
 		return
+	}
+
+	logs.Info().Str("EmployeeID", employee.ID).Msg("Successfully updated employee in MySQL")
+
+	// Update in Redis
+	if err := redis.SetEmployeeByIdInRedis(ctx, existingEmployee); err != nil {
+		logs.Error().Err(err).Str("EmployeeID", employee.ID).Msg("Failed to update employee in Redis")
+	} else {
+		logs.Info().Str("EmployeeID", employee.ID).Msg("Successfully updated employee in Redis")
 	}
 
 	logs.Info().Str("EmployeeID", employee.ID).Msg("Successfully updated employee in MySQL and Redis")

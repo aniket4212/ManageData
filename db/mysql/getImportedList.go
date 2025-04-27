@@ -6,9 +6,7 @@ import (
 	"managedata/model"
 )
 
-// FetchAllEmployees fetches all employee records from MySQL.
-func FetchAllEmployeesFromMysql() ([]model.Employee, error) {
-	ctx := context.Background()
+func FetchAllEmployeesFromMysql(ctx context.Context) ([]model.Employee, error) {
 
 	const query = `
 		SELECT id, first_name, last_name, company_name, address, city, county, postal, phone, email, web
@@ -23,5 +21,3 @@ func FetchAllEmployeesFromMysql() ([]model.Employee, error) {
 
 	return employees, nil
 }
-
-

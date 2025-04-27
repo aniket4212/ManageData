@@ -4,14 +4,19 @@ import (
 	"fmt"
 	"managedata/db/mysql"
 	"managedata/db/redis"
+	"managedata/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
 )
 
-func ViewEmployeeByID(c *gin.Context) {
+func GetDataByIdHandler(c *gin.Context) {
+
+	ctx := c.Request.Context()
+
 	employeeID := c.DefaultQuery("id", "")
+
+	logs := utils.GetLogger()
 
 	if employeeID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -22,21 +27,21 @@ func ViewEmployeeByID(c *gin.Context) {
 	}
 
 	// First, check Redis for the specific employee
-	employee, err := redis.GetEmployeeByIDFromRedis(employeeID)
+	employee, err := redis.GetEmployeeByIDFromRedis(ctx, employeeID)
 	if err == nil {
-		log.Info().Msgf("Successfully fetched employee ID %s from Redis", employeeID)
+		logs.Info().Msgf("Successfully fetched employee ID %s from Redis", employeeID)
 		c.JSON(http.StatusOK, gin.H{
 			"employee": employee,
 		})
 		return
 	}
 
-	log.Warn().Err(err).Msgf("Failed to fetch employee ID %s from Redis, trying MySQL...", employeeID)
+	logs.Warn().Err(err).Msgf("Failed to fetch employee ID %s from Redis, trying MySQL...", employeeID)
 
 	// Fetch from MySQL if not found in Redis
-	employee, err = mysql.FetchEmployeeByID(employeeID)
+	employee, err = mysql.FetchEmployeeByID(ctx, employeeID)
 	if err != nil {
-		log.Error().Err(err).Msgf("Failed to retrieve employee ID %s from MySQL", employeeID)
+		logs.Error().Err(err).Msgf("Failed to retrieve employee ID %s from MySQL", employeeID)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("Failed to retrieve employee from MySQL: %v", err),
 		})
@@ -44,7 +49,7 @@ func ViewEmployeeByID(c *gin.Context) {
 	}
 
 	if employee.ID == "" {
-		log.Info().Msgf("Employee ID %s not found in MySQL", employeeID)
+		logs.Info().Msgf("Employee ID %s not found in MySQL", employeeID)
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "Employee not found",
 		})
@@ -52,14 +57,14 @@ func ViewEmployeeByID(c *gin.Context) {
 	}
 
 	// Cache the employee in Redis
-	err = redis.SetSingleEmployeeInRedis(employee)
+	err = redis.SetEmployeeByIdInRedis(ctx, employee)
 	if err != nil {
-		log.Warn().Err(err).Msgf("Failed to cache employee ID %s into Redis", employeeID)
+		logs.Warn().Err(err).Msgf("Failed to cache employee ID %s into Redis", employeeID)
 	} else {
-		log.Info().Msgf("Successfully cached employee ID %s into Redis", employeeID)
+		logs.Info().Msgf("Successfully cached employee ID %s into Redis", employeeID)
 	}
 
-	log.Info().Msgf("Successfully fetched employee ID %s from MySQL", employeeID)
+	logs.Info().Msgf("Successfully fetched employee ID %s from MySQL", employeeID)
 	c.JSON(http.StatusOK, gin.H{
 		"employee": employee,
 	})

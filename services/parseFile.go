@@ -1,8 +1,9 @@
-package mysql
+package services
 
 import (
 	"fmt"
 	"io"
+	"managedata/db/mysql"
 	"managedata/db/redis"
 	"managedata/model"
 	"managedata/utils"
@@ -32,6 +33,7 @@ func CompareHeaders(headers []string, expected []string) bool {
 }
 
 func ParseAndInsertExcelFile(file io.Reader) {
+
 	f, err := excelize.OpenReader(file)
 	if err != nil {
 		fmt.Printf("unable to parse Excel file: %v\n", err)
@@ -119,7 +121,7 @@ func UpdateDatabaseAndCache(employees []model.Employee, wg *sync.WaitGroup, tota
 		return
 	}
 
-	InsertBatch(employees, totalInserted)
+	mysql.InsertBatch(employees, totalInserted)
 
 	redis.SetEmployee(employees)
 }

@@ -6,9 +6,7 @@ import (
 	"managedata/model"
 )
 
-func UpdateEmployeeByID(employee model.Employee) error {
-	ctx := context.Background()
-
+func UpdateEmployeeByID(ctx context.Context, employee model.Employee) error {
 	query := `
 		UPDATE Employee
 		SET first_name = ?, last_name = ?, company_name = ?, address = ?, city = ?, county = ?, postal = ?, phone = ?, email = ?, web = ?

@@ -1,5 +1,5 @@
 {
-  "Prefix": "/api/filestorage",
+  "Prefix": "/api/managedata",
   "Server": {
     "Host": "localhost",
     "Port": "9000"

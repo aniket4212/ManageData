@@ -9,13 +9,13 @@ import (
 )
 
 func RegisterRouter(server *gin.Engine) {
-	// Ping API
 	server.GET(config.AppConfig.Prefix+"/ping", PingResponse)
 
 	server.POST(config.AppConfig.Prefix+"/uploadFile", controller.UploadExcelHandler)
-	server.GET(config.AppConfig.Prefix+"/getAllData", controller.ViewImportedList)
-	server.GET(config.AppConfig.Prefix+"/getDataById", controller.ViewEmployeeByID)
-	server.PATCH(config.AppConfig.Prefix+"/updateById", controller.UpdateEmployee)
+	server.GET(config.AppConfig.Prefix+"/getAllData", controller.GetAllDataHandler)
+	server.GET(config.AppConfig.Prefix+"/getDataById", controller.GetDataByIdHandler)
+	server.PATCH(config.AppConfig.Prefix+"/updateById", controller.UpdataDataByIdHandler)
+	server.DELETE(config.AppConfig.Prefix+"/deleteById", controller.DeleteEmployeeHandler)
 
 }
 

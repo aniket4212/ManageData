@@ -10,7 +10,6 @@ import (
 )
 
 func InsertBatch(employees []model.Employee, totalInserted *int64) {
-
 	logs := utils.GetLogger()
 	ctx := context.Background()
 
@@ -19,14 +18,12 @@ func InsertBatch(employees []model.Employee, totalInserted *int64) {
 		return
 	}
 
-	// Begin transaction
 	tx, err := Db.BeginTx(ctx, nil)
 	if err != nil {
 		logs.Error().Err(err).Msg("Failed to begin transaction")
 		return
 	}
 
-	// Construct bulk INSERT query
 	var builder strings.Builder
 	builder.WriteString(`
 		INSERT INTO Employee (
