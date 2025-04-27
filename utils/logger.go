@@ -16,3 +16,4 @@ func GetLogger() zerolog.Logger {
 		Timestamp().
 		Logger()
 }
+

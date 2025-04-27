@@ -75,3 +75,4 @@ func GetAllEmployeesFromRedis(ctx context.Context) ([]model.Employee, error) {
 
 	return employees, nil
 }
+
