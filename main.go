@@ -29,8 +29,6 @@ func init() {
 }
 
 func main() {
-	// read config file
-	config.GetConfigurations()
 
 	err := run()
 	if err != nil {
@@ -60,7 +58,7 @@ func run() (err error) {
 	srv := &http.Server{
 		Addr:         ":" + config.AppConfig.Server.Port,
 		BaseContext:  func(_ net.Listener) context.Context { return ctx },
-		ReadTimeout:  time.Second,
+		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		Handler:      router,
 	}
